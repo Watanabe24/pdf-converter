@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>変換ツール</title>
+
+<style>
+body {
+    font-family: sans-serif;
+    background: #f5f5f5;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.box {
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    width: 320px;
+    text-align: center;
+}
+
+.drop {
+    border: 2px dashed #ccc;
+    padding: 30px;
+    margin-bottom: 15px;
+    cursor: pointer;
+}
+
+select, button {
+    width: 100%;
+    margin-top: 10px;
+    padding: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="box">
+<h2>ファイル変換</h2>
+
+<div class="drop" id="dropArea">
+クリック or ドラッグ
+<input type="file" id="fileInput" hidden>
+</div>
+
+<select id="format">
+<option value="pdf">PDF</option>
+<option value="docx">Word</option>
+<option value="xlsx">Excel</option>
+</select>
+
+<button onclick="upload()">変換</button>
+<p id="status"></p>
+
+</div>
+
+<script>
+let file;
+
+const drop = document.getElementById("dropArea");
+const input = document.getElementById("fileInput");
+
+drop.onclick = () => input.click();
+
+input.onchange = () => {
+    file = input.files[0];
+    drop.textContent = file.name;
+};
+
+drop.ondragover = e => e.preventDefault();
+
+drop.ondrop = e => {
+    e.preventDefault();
+    file = e.dataTransfer.files[0];
+    drop.textContent = file.name;
+};
+
+async function upload() {
+    if (!file) return alert("ファイル選べ");
+
+    const status = document.getElementById("status");
+    status.textContent = "変換中...";
+
+    const form = new FormData();
+    form.append("file", file);
+
+    const res = await fetch("http://localhost:4000/convert", {
+        method: "POST",
+        body: form
+    });
+
+    const blob = await res.blob();
+
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "converted";
+    a.click();
+
+    status.textContent = "完了";
+}
+</script>
+
+</body>
+</html>
